@@ -1,0 +1,9 @@
+assets/
+**/frames/
+**/out/
+**/check/
+mix_raw.wav
+cues.json
+*.blend1
+*.mp4
+__pycache__/
