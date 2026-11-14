@@ -1,0 +1,13 @@
+{
+  "build": "build.py",
+  "audio": "mix_raw.wav",
+  "scale": 50,
+  "step": 2,
+  "samples": 1,
+  "final": [
+    "python build_mix.py",
+    "blender -b -P build.py -- frames",
+    "python post.py",
+    "ffmpeg -y -loglevel error -framerate 24 -i out/f_%04d.png -i mix_raw.wav -c:v libx264 -crf 16 -pix_fmt yuv420p -af \"loudnorm=I=-15:TP=-1.5:LRA=11,aresample=48000\" -c:a aac -b:a 192k -shortest short.mp4"
+  ]
+}

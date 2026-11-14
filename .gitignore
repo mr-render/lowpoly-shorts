@@ -7,3 +7,5 @@ cues.json
 *.blend1
 *.mp4
 __pycache__/
+preview/
+*.blend

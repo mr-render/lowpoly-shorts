@@ -1,7 +1,7 @@
 """Short 1: "What if lifts were as fast as rockets?" (~34 s, PS1 low-poly, Quaternius CC0).
 
 Shot times come from the VO word timings (vo/takeA_words.json).
-Run: blender -b -P build.py -- <frames_dir> [--still f1,f2,...]
+Run: blender -b -P build.py -- <frames_dir> [--still f1,f2,...] [--blend-only]
 """
 import bpy, sys, os, math, random
 
@@ -333,7 +333,9 @@ for cname in ("c_launch", "c_seven", "c_knees", "c_grey", "c_floor", "c_stops", 
 # ---------------------------------------------------------------- render
 K.ps1_render_settings(scn, outdir)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(outdir, "..", "lift_rocket.blend"))
-if "--still" in args:
+if "--blend-only" in args:          # the preview tool builds the scene, then renders it itself
+    pass
+elif "--still" in args:
     fl = [int(x) for x in args[args.index("--still") + 1].split(",")]
     for f in fl:
         scn.frame_set(f)

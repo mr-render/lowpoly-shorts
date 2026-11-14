@@ -28,10 +28,11 @@ Read that example before writing a new short: it is the template.
 | 3 | Word timings | `python ../../scripts/words.py vo/takeA.mp3` | `takeA_words.json` has no zero-length words. |
 | 4 | Shot list | table in `script.md` | One shot per VO phrase, a new picture every 1-3 s, each shot keyed to a word time. |
 | 5 | Scene | `build.py` (Blender) | `blender -b -P build.py -- frames --still 30,120,...` renders stills; look at every still before the full render. |
-| 6 | Render | `blender -b -P build.py -- frames` | 360x640 EEVEE PNGs, `f_0001.png`... |
-| 7 | Sound | `python build_mix.py` | SFX placed on picture frames, VO on top, lo-fi bed under, ducking. Writes `mix_raw.wav` + `cues.json`. |
-| 8 | Post | `python post.py` | PS1 dither, effects, word-highlight captions, stat callouts -> `out/` at 1080x1920. |
-| 9 | Mux | see below | `short.mp4`, then measure and check sync. |
+| 6 | Preview + notes | `python ../../scripts/preview.py . render` then `serve` | User has no open notes (see Preview loop). |
+| 7 | Render | `blender -b -P build.py -- frames` | 360x640 EEVEE PNGs, `f_0001.png`... |
+| 8 | Sound | `python build_mix.py` | SFX placed on picture frames, VO on top, lo-fi bed under, ducking. Writes `mix_raw.wav` + `cues.json`. |
+| 9 | Post | `python post.py` | PS1 dither, effects, word-highlight captions, stat callouts -> `out/` at 1080x1920. |
+| 10 | Mux | see below | `short.mp4`, then measure and check sync. |
 
 Frame rule everywhere: 24 fps, frame 1 = t 0, `F = lambda t: int(round(t * 24)) + 1`.
 
@@ -44,6 +45,31 @@ ffmpeg -y -framerate 24 -i out/f_%04d.png -i mix_raw.wav -c:v libx264 -crf 16 -p
 Swap the voice later without re-cutting the picture:
 `python ../../scripts/words.py vo/takeB.mp3` then `python ../../scripts/align.py vo/takeA_words.json vo/takeB.mp3 --end 34` (`--end` = where the VO bed stops; output is end + 2 s long. Without it: last word + 1.5 s, which gives a shorter file than the picture)
 -> `takeB_aligned.wav` + `takeB_aligned_words.json`. Point `build_mix.py` (VO env var) and `post.py` at them.
+
+## Preview loop (before the full render)
+Fast low-res preview in the browser, the user leaves notes on the timeline, Claude fixes and re-renders
+only the shots whose content changed. Shots = the camera markers in `build.py`.
+
+| Do | Command (from the short's folder) |
+|----|-----------------------------------|
+| Render the preview | `python ../../scripts/preview.py . render` (first run: every shot; later: only changed shots) |
+| Open the notes page | `python ../../scripts/preview.py . serve` -> http://127.0.0.1:8765 |
+| Read the notes | `python ../../scripts/preview.py . notes` (grouped by shot, with frame numbers) |
+| After fixing | edit `build.py`, run `render` again, then `python ../../scripts/preview.py . done 3 5 --reply "what you changed"` |
+| Force shots | `render --shots c_press,c_slam` or `render --all` |
+
+- `build.py` must accept `--blend-only` (build the scene, save, do not render). See the example.
+- Change detection: every preview frame gets a fingerprint (active camera, every visible object's
+  transform, armature pose, face swaps, materials, lights, mesh data). A shot re-renders only if one of
+  its frames changed. Unchanged shots keep their old frames.
+- Settings in `preview.json` (optional): `scale` 50 (%), `step` 2 (every 2nd frame), `samples` 1,
+  `audio` (default `mix_raw.wav`, else the VO), `final` = the full pipeline commands. The page's
+  "Approve & render final" button runs them; `notes` prints APPROVED when the user clicked it.
+- Fix the notes one by one, reply on each, re-render, and tell the user to refresh nothing: the page
+  reloads the video by itself. Repeated notes of the same kind become a rule in this file.
+- Measured on lift-rocket (RTX 3070 Ti laptop, 820 frames): first preview 76 s, one shot changed 13 s,
+  nothing changed 12 s. Most of a frame's render time is fixed overhead, so lower resolution helps
+  less than rendering fewer frames.
 
 ## Kit API (`scripts/lowpoly_kit.py`, import inside Blender)
 - `load_character(scn, "Suit")` -> `(armature, meshes, actions)`. Characters: Adventurer, Beach,
