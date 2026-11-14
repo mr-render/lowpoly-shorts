@@ -15,7 +15,7 @@ Example in `examples/lift-rocket/`: "What if lifts were as fast as rockets?" (34
 
 ## Install
 ```
-git clone https://github.com/sinsino01/lowpoly-shorts ~/.claude/skills/lowpoly-shorts
+git clone https://github.com/mr-render/lowpoly-shorts ~/.claude/skills/lowpoly-shorts
 pip install numpy pillow soundfile faster-whisper
 ```
 Unzip the character pack into `~/.claude/skills/lowpoly-shorts/assets/quaternius-modular-men/`
